@@ -11,6 +11,9 @@ for (const c of corpus) {
   if (c.helpers) {
     for (const [n, spec] of Object.entries(c.helpers)) {
       if (spec === '__param0__') h.registerHelper(n, function (x) { return x; });
+      else if (spec === '__hash__') h.registerHelper(n, function (opts) { return opts.hash.first + '-' + opts.hash.last; });
+      else if (spec === '__block__') h.registerHelper(n, function () { const o = arguments[arguments.length - 1]; return 'B[' + o.fn(this) + ']'; });
+      else if (spec === 'caught') h.registerHelper(n, function () { return 'caught'; });
       else h.registerHelper(n, function () { return spec; });
     }
   }

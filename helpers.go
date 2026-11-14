@@ -3,6 +3,7 @@ package handlebars
 import (
 	"fmt"
 	"reflect"
+	"sort"
 	"strings"
 )
 
@@ -90,27 +91,30 @@ func helperEach(c *HelperCall) (any, error) {
 		}
 		for i := 0; i < rv.Len(); i++ {
 			item := rv.Index(i).Interface()
-			data := map[string]any{"index": i, "first": i == 0, "last": i == rv.Len()-1, "key": i}
+			c.PendingData = map[string]any{"index": i, "first": i == 0, "last": i == rv.Len()-1, "key": i}
 			if len(c.BlockParams) > 0 {
 				c.BlockParams = []any{item, i}
 			}
-			out, err := c.fnWithData(item, data)
+			out, err := c.Fn(item)
 			if err != nil {
 				return nil, err
 			}
 			b.WriteString(out)
 		}
 	case reflect.Map:
-		iter := rv.MapRange()
+		// Go maps have no insertion order: keys are sorted for determinism.
+		// (handlebars.js preserves object insertion order - a named dialect note.)
 		keys := rv.MapKeys()
+		sort.Slice(keys, func(i, j int) bool {
+			return fmt.Sprint(keys[i].Interface()) < fmt.Sprint(keys[j].Interface())
+		})
 		for i, k := range keys {
-			_ = iter
 			val := rv.MapIndex(k).Interface()
-			data := map[string]any{"key": fmt.Sprint(k.Interface()), "index": i, "first": i == 0, "last": i == len(keys)-1}
+			c.PendingData = map[string]any{"key": fmt.Sprint(k.Interface()), "index": i, "first": i == 0, "last": i == len(keys)-1}
 			if len(c.BlockParams) > 0 {
 				c.BlockParams = []any{val, fmt.Sprint(k.Interface())}
 			}
-			out, err := c.fnWithData(val, data)
+			out, err := c.Fn(val)
 			if err != nil {
 				return nil, err
 			}
@@ -122,25 +126,6 @@ func helperEach(c *HelperCall) (any, error) {
 		}
 	}
 	return b.String(), nil
-}
-
-// fnWithData renders the block with ctx and extra @data vars merged.
-func (c *HelperCall) fnWithData(ctx any, extra map[string]any) (string, error) {
-	if c.Fn == nil {
-		return "", nil
-	}
-	// merge data
-	orig := c.Frame.Data
-	merged := map[string]any{}
-	for k, v := range orig {
-		merged[k] = v
-	}
-	for k, v := range extra {
-		merged[k] = v
-	}
-	c.Frame.Data = merged
-	defer func() { c.Frame.Data = orig }()
-	return c.Fn(ctx)
 }
 
 func helperWith(c *HelperCall) (any, error) {

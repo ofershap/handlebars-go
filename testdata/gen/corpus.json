@@ -1,50 +1,627 @@
 [
-  {"name":"interp-string","template":"Hello {{name}}!","context":{"name":"World"}},
-  {"name":"interp-escape","template":"{{html}}","context":{"html":"<b>&\"x\"</b>"}},
-  {"name":"interp-triple","template":"{{{html}}}","context":{"html":"<b>bold</b>"}},
-  {"name":"interp-amp","template":"{{& html}}","context":{"html":"<i>x</i>"}},
-  {"name":"interp-noescape-opt","template":"{{html}}","context":{"html":"<u>y</u>"},"options":{"noEscape":true}},
-  {"name":"path-dotted","template":"{{user.profile.name}}","context":{"user":{"profile":{"name":"Dana"}}}},
-  {"name":"path-slashed","template":"{{user/profile/name}}","context":{"user":{"profile":{"name":"Dana"}}}},
-  {"name":"path-this","template":"{{this}}","context":"scalar"},
-  {"name":"path-this-dot","template":"{{this.name}}","context":{"name":"N"}},
-  {"name":"path-index","template":"{{list.[1]}}","context":{"list":["a","b","c"]}},
-  {"name":"path-parent","template":"{{#with a}}{{b}}/{{../c}}{{/with}}","context":{"a":{"b":"B"},"c":"C"}},
-  {"name":"missing-default","template":"[{{nope}}]","context":{}},
-  {"name":"missing-strict","template":"[{{nope}}]","context":{},"options":{"strict":true},"expectError":true},
-  {"name":"section-array","template":"{{#items}}{{this}};{{/items}}","context":{"items":[1,2,3]}},
-  {"name":"section-object","template":"{{#obj}}{{k}}{{/obj}}","context":{"obj":{"k":"V"}}},
-  {"name":"section-false-else","template":"{{#flag}}Y{{else}}N{{/flag}}","context":{"flag":false}},
-  {"name":"section-empty-array-else","template":"{{#items}}x{{else}}empty{{/items}}","context":{"items":[]}},
-  {"name":"inverted-section","template":"{{^items}}none{{/items}}","context":{"items":[]}},
-  {"name":"if-truthy","template":"{{#if user}}yes{{/if}}","context":{"user":{"a":1}}},
-  {"name":"if-falsy-zero","template":"{{#if n}}yes{{else}}no{{/if}}","context":{"n":0}},
-  {"name":"if-include-zero","template":"{{#if n includeZero=true}}zero-in{{/if}}","context":{"n":0}},
-  {"name":"if-empty-string","template":"{{#if s}}yes{{else}}no{{/if}}","context":{"s":""}},
-  {"name":"unless","template":"{{#unless ok}}not-ok{{/unless}}","context":{"ok":false}},
-  {"name":"each-index","template":"{{#each list}}{{@index}}:{{this}} {{/each}}","context":{"list":["x","y"]}},
-  {"name":"each-first-last","template":"{{#each list}}{{#if @first}}F{{/if}}{{this}}{{#if @last}}L{{/if}};{{/each}}","context":{"list":["a","b","c"]}},
-  {"name":"each-object-key","template":"{{#each obj}}{{@key}}={{this}};{{/each}}","context":{"obj":{"a":1,"b":2}}},
-  {"name":"each-block-params","template":"{{#each list as |v i|}}{{i}}={{v}};{{/each}}","context":{"list":["p","q"]}},
-  {"name":"each-nested-lists","template":"{{#each groups}}{{#each items}}{{@key}};{{/each}}{{/each}}","context":{"groups":[{"items":{"x":1}}]}},
-  {"name":"with-basic","template":"{{#with user}}{{name}} ({{age}}){{/with}}","context":{"user":{"name":"A","age":3}}},
-  {"name":"with-else","template":"{{#with missing}}X{{else}}none{{/with}}","context":{}},
-  {"name":"helper-lookup","template":"{{lookup list 1}}","context":{"list":["a","b"]}},
-  {"name":"helper-lookup-subexpr","template":"{{lookup list (lookup idx 0)}}","context":{"list":["a","b"],"idx":[1]}},
-  {"name":"number-interp","template":"{{n}} {{f}}","context":{"n":42,"f":1.5}},
-  {"name":"bool-null-interp","template":"{{t}}|{{f}}|{{z}}","context":{"t":true,"f":false,"z":null}},
-  {"name":"comment-inline","template":"a{{! note }}b","context":{}},
-  {"name":"comment-long","template":"a{{!-- has }} inside --}}b","context":{}},
-  {"name":"whitespace-control","template":"  {{~name~}}  ","context":{"name":"X"}},
-  {"name":"standalone-block","template":"A\n{{#if ok}}\nB\n{{/if}}\nC","context":{"ok":true}},
-  {"name":"standalone-comment","template":"A\n{{! note }}\nB","context":{}},
-  {"name":"partial-basic","template":"{{> greeting}}","context":{"name":"Bo"},"partials":{"greeting":"Hi {{name}}"}},
-  {"name":"partial-context","template":"{{> greeting user}}","context":{"user":{"name":"Cy"}},"partials":{"greeting":"Hi {{name}}"}},
-  {"name":"partial-hash","template":"{{> greeting name=other}}","context":{"name":"Bo","other":"Ov"},"partials":{"greeting":"Hi {{name}}"}},
-  {"name":"raw-block","template":"{{{{raw}}}}{{unescaped}}{{{{/raw}}}}","context":{}},
-  {"name":"root-ref","template":"{{#with a}}{{@root.top}}{{/with}}","context":{"top":"T","a":{}}},
-  {"name":"depth-two-up","template":"{{#with a}}{{#with b}}{{../../c}}{{/with}}{{/with}}","context":{"a":{"b":{}},"c":"deep"}},
-  {"name":"hash-args","template":"{{#if cond}}Y{{/if}}","context":{"cond":true}},
-  {"name":"known-helpers-only","template":"{{unknownFn 1}}","context":{},"options":{"knownHelpersOnly":true,"knownHelpers":{"if":true}},"expectError":true},
-  {"name":"string-params","template":"{{echo missing.path}}","context":{},"options":{"stringParams":true},"helpers":{"echo":"__param0__"}}
+ {
+  "name": "interp-string",
+  "template": "Hello {{name}}!",
+  "context": {
+   "name": "World"
+  }
+ },
+ {
+  "name": "interp-escape",
+  "template": "{{html}}",
+  "context": {
+   "html": "<b>&\"x\"</b>"
+  }
+ },
+ {
+  "name": "interp-triple",
+  "template": "{{{html}}}",
+  "context": {
+   "html": "<b>bold</b>"
+  }
+ },
+ {
+  "name": "interp-amp",
+  "template": "{{& html}}",
+  "context": {
+   "html": "<i>x</i>"
+  }
+ },
+ {
+  "name": "interp-noescape-opt",
+  "template": "{{html}}",
+  "context": {
+   "html": "<u>y</u>"
+  },
+  "options": {
+   "noEscape": true
+  }
+ },
+ {
+  "name": "path-dotted",
+  "template": "{{user.profile.name}}",
+  "context": {
+   "user": {
+    "profile": {
+     "name": "Dana"
+    }
+   }
+  }
+ },
+ {
+  "name": "path-slashed",
+  "template": "{{user/profile/name}}",
+  "context": {
+   "user": {
+    "profile": {
+     "name": "Dana"
+    }
+   }
+  }
+ },
+ {
+  "name": "path-this",
+  "template": "{{this}}",
+  "context": "scalar"
+ },
+ {
+  "name": "path-this-dot",
+  "template": "{{this.name}}",
+  "context": {
+   "name": "N"
+  }
+ },
+ {
+  "name": "path-index",
+  "template": "{{list.[1]}}",
+  "context": {
+   "list": [
+    "a",
+    "b",
+    "c"
+   ]
+  }
+ },
+ {
+  "name": "path-parent",
+  "template": "{{#with a}}{{b}}/{{../c}}{{/with}}",
+  "context": {
+   "a": {
+    "b": "B"
+   },
+   "c": "C"
+  }
+ },
+ {
+  "name": "missing-default",
+  "template": "[{{nope}}]",
+  "context": {}
+ },
+ {
+  "name": "missing-strict",
+  "template": "[{{nope}}]",
+  "context": {},
+  "options": {
+   "strict": true
+  },
+  "expectError": true
+ },
+ {
+  "name": "section-array",
+  "template": "{{#items}}{{this}};{{/items}}",
+  "context": {
+   "items": [
+    1,
+    2,
+    3
+   ]
+  }
+ },
+ {
+  "name": "section-object",
+  "template": "{{#obj}}{{k}}{{/obj}}",
+  "context": {
+   "obj": {
+    "k": "V"
+   }
+  }
+ },
+ {
+  "name": "section-false-else",
+  "template": "{{#flag}}Y{{else}}N{{/flag}}",
+  "context": {
+   "flag": false
+  }
+ },
+ {
+  "name": "section-empty-array-else",
+  "template": "{{#items}}x{{else}}empty{{/items}}",
+  "context": {
+   "items": []
+  }
+ },
+ {
+  "name": "inverted-section",
+  "template": "{{^items}}none{{/items}}",
+  "context": {
+   "items": []
+  }
+ },
+ {
+  "name": "if-truthy",
+  "template": "{{#if user}}yes{{/if}}",
+  "context": {
+   "user": {
+    "a": 1
+   }
+  }
+ },
+ {
+  "name": "if-falsy-zero",
+  "template": "{{#if n}}yes{{else}}no{{/if}}",
+  "context": {
+   "n": 0
+  }
+ },
+ {
+  "name": "if-include-zero",
+  "template": "{{#if n includeZero=true}}zero-in{{/if}}",
+  "context": {
+   "n": 0
+  }
+ },
+ {
+  "name": "if-empty-string",
+  "template": "{{#if s}}yes{{else}}no{{/if}}",
+  "context": {
+   "s": ""
+  }
+ },
+ {
+  "name": "unless",
+  "template": "{{#unless ok}}not-ok{{/unless}}",
+  "context": {
+   "ok": false
+  }
+ },
+ {
+  "name": "each-index",
+  "template": "{{#each list}}{{@index}}:{{this}} {{/each}}",
+  "context": {
+   "list": [
+    "x",
+    "y"
+   ]
+  }
+ },
+ {
+  "name": "each-first-last",
+  "template": "{{#each list}}{{#if @first}}F{{/if}}{{this}}{{#if @last}}L{{/if}};{{/each}}",
+  "context": {
+   "list": [
+    "a",
+    "b",
+    "c"
+   ]
+  }
+ },
+ {
+  "name": "each-object-key",
+  "template": "{{#each obj}}{{@key}}={{this}};{{/each}}",
+  "context": {
+   "obj": {
+    "a": 1,
+    "b": 2
+   }
+  }
+ },
+ {
+  "name": "each-block-params",
+  "template": "{{#each list as |v i|}}{{i}}={{v}};{{/each}}",
+  "context": {
+   "list": [
+    "p",
+    "q"
+   ]
+  }
+ },
+ {
+  "name": "each-nested-lists",
+  "template": "{{#each groups}}{{#each items}}{{@key}};{{/each}}{{/each}}",
+  "context": {
+   "groups": [
+    {
+     "items": {
+      "x": 1
+     }
+    }
+   ]
+  }
+ },
+ {
+  "name": "with-basic",
+  "template": "{{#with user}}{{name}} ({{age}}){{/with}}",
+  "context": {
+   "user": {
+    "name": "A",
+    "age": 3
+   }
+  }
+ },
+ {
+  "name": "with-else",
+  "template": "{{#with missing}}X{{else}}none{{/with}}",
+  "context": {}
+ },
+ {
+  "name": "helper-lookup",
+  "template": "{{lookup list 1}}",
+  "context": {
+   "list": [
+    "a",
+    "b"
+   ]
+  }
+ },
+ {
+  "name": "helper-lookup-subexpr",
+  "template": "{{lookup list (lookup idx 0)}}",
+  "context": {
+   "list": [
+    "a",
+    "b"
+   ],
+   "idx": [
+    1
+   ]
+  }
+ },
+ {
+  "name": "number-interp",
+  "template": "{{n}} {{f}}",
+  "context": {
+   "n": 42,
+   "f": 1.5
+  }
+ },
+ {
+  "name": "bool-null-interp",
+  "template": "{{t}}|{{f}}|{{z}}",
+  "context": {
+   "t": true,
+   "f": false,
+   "z": null
+  }
+ },
+ {
+  "name": "comment-inline",
+  "template": "a{{! note }}b",
+  "context": {}
+ },
+ {
+  "name": "comment-long",
+  "template": "a{{!-- has }} inside --}}b",
+  "context": {}
+ },
+ {
+  "name": "whitespace-control",
+  "template": "  {{~name~}}  ",
+  "context": {
+   "name": "X"
+  }
+ },
+ {
+  "name": "standalone-block",
+  "template": "A\n{{#if ok}}\nB\n{{/if}}\nC",
+  "context": {
+   "ok": true
+  }
+ },
+ {
+  "name": "standalone-comment",
+  "template": "A\n{{! note }}\nB",
+  "context": {}
+ },
+ {
+  "name": "partial-basic",
+  "template": "{{> greeting}}",
+  "context": {
+   "name": "Bo"
+  },
+  "partials": {
+   "greeting": "Hi {{name}}"
+  }
+ },
+ {
+  "name": "partial-context",
+  "template": "{{> greeting user}}",
+  "context": {
+   "user": {
+    "name": "Cy"
+   }
+  },
+  "partials": {
+   "greeting": "Hi {{name}}"
+  }
+ },
+ {
+  "name": "partial-hash",
+  "template": "{{> greeting name=other}}",
+  "context": {
+   "name": "Bo",
+   "other": "Ov"
+  },
+  "partials": {
+   "greeting": "Hi {{name}}"
+  }
+ },
+ {
+  "name": "raw-block",
+  "template": "{{{{raw}}}}{{unescaped}}{{{{/raw}}}}",
+  "context": {}
+ },
+ {
+  "name": "root-ref",
+  "template": "{{#with a}}{{@root.top}}{{/with}}",
+  "context": {
+   "top": "T",
+   "a": {}
+  }
+ },
+ {
+  "name": "depth-two-up",
+  "template": "{{#with a}}{{#with b}}{{../../c}}{{/with}}{{/with}}",
+  "context": {
+   "a": {
+    "b": {}
+   },
+   "c": "deep"
+  }
+ },
+ {
+  "name": "hash-args",
+  "template": "{{#if cond}}Y{{/if}}",
+  "context": {
+   "cond": true
+  }
+ },
+ {
+  "name": "known-helpers-only",
+  "template": "{{unknownFn 1}}",
+  "context": {},
+  "options": {
+   "knownHelpersOnly": true,
+   "knownHelpers": {
+    "if": true
+   }
+  },
+  "expectError": true
+ },
+ {
+  "name": "string-params",
+  "template": "{{echo missing.path}}",
+  "context": {},
+  "options": {
+   "stringParams": true
+  },
+  "helpers": {
+   "echo": "__param0__"
+  }
+ },
+ {
+  "name": "escape-all-chars",
+  "template": "{{v}}",
+  "context": {
+   "v": "&<>'\"`="
+  }
+ },
+ {
+  "name": "unicode",
+  "template": "{{v}}",
+  "context": {
+   "v": "שלום 🌍 café"
+  }
+ },
+ {
+  "name": "string-literal-escape",
+  "template": "{{say \"a\\\"b\"}}",
+  "context": {},
+  "helpers": {
+   "say": "__param0__"
+  }
+ },
+ {
+  "name": "hash-multi",
+  "template": "{{greet first=first last=last}}",
+  "context": {
+   "first": "Ada",
+   "last": "L"
+  },
+  "helpers": {
+   "greet": "__hash__"
+  }
+ },
+ {
+  "name": "subexpr-in-hash",
+  "template": "{{#if (lookup flags \"on\")}}ON{{/if}}",
+  "context": {
+   "flags": {
+    "on": true
+   }
+  }
+ },
+ {
+  "name": "partial-indent",
+  "template": "A:\n  {{> item}}\nend",
+  "context": {
+   "v": "x"
+  },
+  "partials": {
+   "item": "one\ntwo"
+  }
+ },
+ {
+  "name": "partial-prevent-indent",
+  "template": "A:\n  {{> item}}\nend",
+  "context": {
+   "v": "x"
+  },
+  "partials": {
+   "item": "one\ntwo"
+  },
+  "options": {
+   "preventIndent": true
+  }
+ },
+ {
+  "name": "partial-nested",
+  "template": "{{> outer}}",
+  "context": {
+   "n": "N"
+  },
+  "partials": {
+   "outer": "O[{{> inner}}]",
+   "inner": "i{{n}}"
+  }
+ },
+ {
+  "name": "partial-block-missing",
+  "template": "{{> notregistered}}",
+  "context": {},
+  "expectError": true
+ },
+ {
+  "name": "helper-missing-hook",
+  "template": "{{nope 1}}",
+  "context": {},
+  "helpers": {
+   "helperMissing": "caught"
+  }
+ },
+ {
+  "name": "block-helper-missing-hook",
+  "template": "{{#thing}}body{{/thing}}",
+  "context": {},
+  "helpers": {
+   "blockHelperMissing": "__block__"
+  }
+ },
+ {
+  "name": "compat-recursive",
+  "template": "{{#with a}}{{top}}{{/with}}",
+  "context": {
+   "top": "T",
+   "a": {}
+  },
+  "options": {
+   "compat": true
+  }
+ },
+ {
+  "name": "no-compat-no-recursive",
+  "template": "[{{#with a}}{{top}}{{/with}}]",
+  "context": {
+   "top": "T",
+   "a": {}
+  }
+ },
+ {
+  "name": "assume-objects",
+  "template": "[{{a.b.c}}]",
+  "context": {
+   "a": {}
+  },
+  "options": {
+   "assumeObjects": true
+  },
+  "expectError": true
+ },
+ {
+  "name": "standalone-partial",
+  "template": "X\n  {{> p}}\nY",
+  "context": {
+   "v": "1"
+  },
+  "partials": {
+   "p": "P{{v}}"
+  }
+ },
+ {
+  "name": "standalone-inverted",
+  "template": "A\n{{^ok}}\nB\n{{/ok}}\nC",
+  "context": {
+   "ok": false
+  }
+ },
+ {
+  "name": "each-else-empty",
+  "template": "{{#each list}}x{{else}}EMPTY{{/each}}",
+  "context": {
+   "list": []
+  }
+ },
+ {
+  "name": "each-map-first-last",
+  "template": "{{#each m}}{{@key}}{{#if @first}}^{{/if}}{{#if @last}}${{/if}} {{/each}}",
+  "context": {
+   "m": {
+    "a": 1,
+    "b": 2
+   }
+  }
+ },
+ {
+  "name": "nested-with-depth",
+  "template": "{{#with a}}{{#with b}}{{c}}/{{../../top}}{{/with}}{{/with}}",
+  "context": {
+   "a": {
+    "b": {
+     "c": "C"
+    }
+   },
+   "top": "T"
+  }
+ },
+ {
+  "name": "if-in-attribute",
+  "template": "<div class=\"{{cls}}\">x</div>",
+  "context": {
+   "cls": "a b"
+  }
+ },
+ {
+  "name": "multiple-same-line",
+  "template": "{{a}}{{b}}{{c}}",
+  "context": {
+   "a": 1,
+   "b": 2,
+   "c": 3
+  }
+ },
+ {
+  "name": "crlf-standalone",
+  "template": "A\r\n{{#if ok}}\r\nB\r\n{{/if}}\r\nC",
+  "context": {
+   "ok": true
+  }
+ },
+ {
+  "name": "each-parent-index",
+  "template": "{{#each rows}}{{#each cols}}{{@../index}}.{{@index}} {{/each}}{{/each}}",
+  "context": {
+   "rows": [
+    {
+     "cols": [
+      "a",
+      "b"
+     ]
+    },
+    {
+     "cols": [
+      "c"
+     ]
+    }
+   ]
+  }
+ }
 ]

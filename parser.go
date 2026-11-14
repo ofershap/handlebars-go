@@ -387,13 +387,16 @@ func (p *parser) subexpr() (*Expression, error) {
 
 func parsePath(s string) *Path {
 	p := &Path{Original: s}
+	if strings.HasPrefix(s, "@") {
+		p.Kind = PathData
+		s = s[1:]
+	}
 	for strings.HasPrefix(s, "../") {
 		p.Depth++
 		s = s[3:]
 	}
-	if strings.HasPrefix(s, "@") {
-		p.Kind = PathData
-		s = s[1:]
+	if p.Kind == PathData {
+		// data path: parts below
 	} else if s == "." || s == "this" {
 		p.Kind = PathThis
 		return p
@@ -482,8 +485,12 @@ func wsPass(prog *Program) {
 					c.Text = trimRightSpace(c.Text)
 				}
 			}
-			if n.TrimRight && n.Program != nil && len(n.Program.Body) > 0 {
-				if c, ok := n.Program.Body[0].(*ContentNode); ok {
+			trimInner := n.Program
+			if trimInner == nil {
+				trimInner = n.Inverse
+			}
+			if n.TrimRight && trimInner != nil && len(trimInner.Body) > 0 {
+				if c, ok := trimInner.Body[0].(*ContentNode); ok {
 					c.Text = trimLeftSpace(c.Text)
 				}
 			}
@@ -491,8 +498,12 @@ func wsPass(prog *Program) {
 			prev, hasPrev := contentAt(i - 1)
 			next, hasNext := contentAt(i + 1)
 			prevTail, prevOK := standaloneTail(prev, hasPrev, i == 0)
-			if prevOK && n.Program != nil && len(n.Program.Body) > 0 {
-				if first, ok := n.Program.Body[0].(*ContentNode); ok {
+			openInner := n.Program
+			if openInner == nil {
+				openInner = n.Inverse // inverted section: body lives in Inverse
+			}
+			if prevOK && openInner != nil && len(openInner.Body) > 0 {
+				if first, ok := openInner.Body[0].(*ContentNode); ok {
 					if trimmed, ok := standaloneHead(first.Text); ok {
 						prev.Text = prevTail
 						first.Text = trimmed
@@ -545,12 +556,13 @@ func wsPass(prog *Program) {
 		case *PartialNode:
 			prev, hasPrev := contentAt(i - 1)
 			next, hasNext := contentAt(i + 1)
-			prevTail, prevOK := standaloneTail(prev, hasPrev, i == 0)
+			_, prevOK := standaloneTail(prev, hasPrev, i == 0)
 			nextHead, nextOK := standaloneHeadNext(next, hasNext, i == len(body)-1)
 			if prevOK && nextOK {
 				if hasPrev {
+					// the tag's own indentation stays: it indents the partial's
+					// first line; Indent indents the rest.
 					n.Indent = tailSpaces(prev.Text)
-					prev.Text = prevTail
 				}
 				if hasNext {
 					next.Text = nextHead

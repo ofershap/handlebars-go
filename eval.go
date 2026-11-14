@@ -25,6 +25,8 @@ type HelperCall struct {
 	RawBody string
 	// BlockParams holds the block-param values from `as |x y|`.
 	BlockParams []any
+	// PendingData carries extra @data vars (index/key/first/last) into Fn.
+	PendingData map[string]any
 	// Ids, when Options.TrackIds, records the id string each param resolved from.
 	Ids []string
 }
@@ -92,7 +94,14 @@ func (s *state) execBlock(b *strings.Builder, n *BlockNode, f *Frame) error {
 	if s.opts.KnownHelpersOnly {
 		return &TemplateError{Msg: fmt.Sprintf("unknown helper %q", head)}
 	}
-	// plain path section: #foo iterates arrays / renders truthy
+	// plain path section: #foo iterates arrays / renders truthy.
+	// If the path resolves nowhere, handlebars calls the blockHelperMissing
+	// hook (builtin default = section semantics; overridable).
+	if _, ok := lookupPath(n.Expr.Path, f, s.opts.Compat); !ok {
+		if hook, hok := s.helpers["blockHelperMissing"]; hok {
+			return s.execBlockHelper(b, n, f, hook)
+		}
+	}
 	v, err := s.evalPathValue(n.Expr.Path, f)
 	if err != nil {
 		return err
@@ -112,6 +121,16 @@ func (s *state) execBlockHelper(b *strings.Builder, n *BlockNode, f *Frame, h He
 	call := &HelperCall{Params: params, Hash: hash, Frame: f, Ids: ids, RawBody: n.RawBody, BlockParams: make([]any, len(n.BlockParams))}
 	call.Fn = func(ctx any) (string, error) {
 		nf := &Frame{Value: pick(ctx, f.Value), Parent: f, Data: f.Data}
+		if len(call.PendingData) > 0 {
+			merged := map[string]any{}
+			for k, v := range f.Data {
+				merged[k] = v
+			}
+			for k, v := range call.PendingData {
+				merged[k] = v
+			}
+			nf.Data = merged
+		}
 		if len(n.BlockParams) > 0 {
 			nf.BlockParamNames = n.BlockParams
 			nf.BlockParamValues = call.BlockParams
@@ -384,7 +403,7 @@ func (s *state) evalPathValue(p *Path, f *Frame) (any, error) {
 		return v, nil
 	}
 	if s.opts.AssumeObjects {
-		return nil, nil
+		return nil, &TemplateError{Msg: fmt.Sprintf("cannot read properties of undefined along %q (assumeObjects)", p.Original)}
 	}
 	if s.opts.Strict {
 		return nil, &TemplateError{Msg: fmt.Sprintf("missing value for %q (strict)", p.Original)}
@@ -395,14 +414,22 @@ func (s *state) evalPathValue(p *Path, f *Frame) (any, error) {
 // lookupPath walks the frame stack for p. Returns (value, found).
 func lookupPath(p *Path, f *Frame, compat bool) (any, bool) {
 	if p.Kind == PathData {
-		d := f.Data
-		for fr := f; fr != nil && d == nil; fr = fr.Parent {
-			d = fr.Data
+		fr := f
+		for d := 0; d < p.Depth && fr != nil; d++ {
+			fr = fr.Parent
 		}
-		if d == nil {
-			return nil, false
+		for ; fr != nil; fr = fr.Parent {
+			if fr.Data == nil {
+				continue
+			}
+			if len(p.Parts) == 0 {
+				return fr.Data, true
+			}
+			if _, present := fr.Data[p.Parts[0]]; present {
+				return resolveParts(fr.Data, p.Parts)
+			}
 		}
-		return resolveParts(d, p.Parts)
+		return nil, false
 	}
 	// block params shadow everything
 	if len(p.Parts) > 0 {

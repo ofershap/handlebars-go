@@ -593,6 +593,303 @@
     "echo": "__param0__"
    },
    "expected": "missing.path"
+  },
+  {
+   "name": "escape-all-chars",
+   "template": "{{v}}",
+   "context": {
+    "v": "&<>'\"`="
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "&amp;&lt;&gt;&#x27;&quot;&#x60;&#x3D;"
+  },
+  {
+   "name": "unicode",
+   "template": "{{v}}",
+   "context": {
+    "v": "שלום 🌍 café"
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "שלום 🌍 café"
+  },
+  {
+   "name": "string-literal-escape",
+   "template": "{{say \"a\\\"b\"}}",
+   "context": {},
+   "options": {},
+   "partials": {},
+   "helpers": {
+    "say": "__param0__"
+   },
+   "expected": "a&quot;b"
+  },
+  {
+   "name": "hash-multi",
+   "template": "{{greet first=first last=last}}",
+   "context": {
+    "first": "Ada",
+    "last": "L"
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {
+    "greet": "__hash__"
+   },
+   "expected": "Ada-L"
+  },
+  {
+   "name": "subexpr-in-hash",
+   "template": "{{#if (lookup flags \"on\")}}ON{{/if}}",
+   "context": {
+    "flags": {
+     "on": true
+    }
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "ON"
+  },
+  {
+   "name": "partial-indent",
+   "template": "A:\n  {{> item}}\nend",
+   "context": {
+    "v": "x"
+   },
+   "options": {},
+   "partials": {
+    "item": "one\ntwo"
+   },
+   "helpers": {},
+   "expected": "A:\n  one\n  twoend"
+  },
+  {
+   "name": "partial-prevent-indent",
+   "template": "A:\n  {{> item}}\nend",
+   "context": {
+    "v": "x"
+   },
+   "options": {
+    "preventIndent": true
+   },
+   "partials": {
+    "item": "one\ntwo"
+   },
+   "helpers": {},
+   "expected": "A:\n  one\ntwoend"
+  },
+  {
+   "name": "partial-nested",
+   "template": "{{> outer}}",
+   "context": {
+    "n": "N"
+   },
+   "options": {},
+   "partials": {
+    "outer": "O[{{> inner}}]",
+    "inner": "i{{n}}"
+   },
+   "helpers": {},
+   "expected": "O[iN]"
+  },
+  {
+   "name": "partial-block-missing",
+   "template": "{{> notregistered}}",
+   "context": {},
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expectError": true,
+   "error": "The partial notregistered could not be found"
+  },
+  {
+   "name": "helper-missing-hook",
+   "template": "{{nope 1}}",
+   "context": {},
+   "options": {},
+   "partials": {},
+   "helpers": {
+    "helperMissing": "caught"
+   },
+   "expected": "caught"
+  },
+  {
+   "name": "block-helper-missing-hook",
+   "template": "{{#thing}}body{{/thing}}",
+   "context": {},
+   "options": {},
+   "partials": {},
+   "helpers": {
+    "blockHelperMissing": "__block__"
+   },
+   "expected": "B[body]"
+  },
+  {
+   "name": "compat-recursive",
+   "template": "{{#with a}}{{top}}{{/with}}",
+   "context": {
+    "top": "T",
+    "a": {}
+   },
+   "options": {
+    "compat": true
+   },
+   "partials": {},
+   "helpers": {},
+   "expected": "T"
+  },
+  {
+   "name": "no-compat-no-recursive",
+   "template": "[{{#with a}}{{top}}{{/with}}]",
+   "context": {
+    "top": "T",
+    "a": {}
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "[]"
+  },
+  {
+   "name": "assume-objects",
+   "template": "[{{a.b.c}}]",
+   "context": {
+    "a": {}
+   },
+   "options": {
+    "assumeObjects": true
+   },
+   "partials": {},
+   "helpers": {},
+   "expectError": true,
+   "error": "Cannot read properties of undefined (reading 'c')"
+  },
+  {
+   "name": "standalone-partial",
+   "template": "X\n  {{> p}}\nY",
+   "context": {
+    "v": "1"
+   },
+   "options": {},
+   "partials": {
+    "p": "P{{v}}"
+   },
+   "helpers": {},
+   "expected": "X\n  P1Y"
+  },
+  {
+   "name": "standalone-inverted",
+   "template": "A\n{{^ok}}\nB\n{{/ok}}\nC",
+   "context": {
+    "ok": false
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "A\nB\nC"
+  },
+  {
+   "name": "each-else-empty",
+   "template": "{{#each list}}x{{else}}EMPTY{{/each}}",
+   "context": {
+    "list": []
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "EMPTY"
+  },
+  {
+   "name": "each-map-first-last",
+   "template": "{{#each m}}{{@key}}{{#if @first}}^{{/if}}{{#if @last}}${{/if}} {{/each}}",
+   "context": {
+    "m": {
+     "a": 1,
+     "b": 2
+    }
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "a^ b$ "
+  },
+  {
+   "name": "nested-with-depth",
+   "template": "{{#with a}}{{#with b}}{{c}}/{{../../top}}{{/with}}{{/with}}",
+   "context": {
+    "a": {
+     "b": {
+      "c": "C"
+     }
+    },
+    "top": "T"
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "C/T"
+  },
+  {
+   "name": "if-in-attribute",
+   "template": "<div class=\"{{cls}}\">x</div>",
+   "context": {
+    "cls": "a b"
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "<div class=\"a b\">x</div>"
+  },
+  {
+   "name": "multiple-same-line",
+   "template": "{{a}}{{b}}{{c}}",
+   "context": {
+    "a": 1,
+    "b": 2,
+    "c": 3
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "123"
+  },
+  {
+   "name": "crlf-standalone",
+   "template": "A\r\n{{#if ok}}\r\nB\r\n{{/if}}\r\nC",
+   "context": {
+    "ok": true
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "A\r\nB\r\nC"
+  },
+  {
+   "name": "each-parent-index",
+   "template": "{{#each rows}}{{#each cols}}{{@../index}}.{{@index}} {{/each}}{{/each}}",
+   "context": {
+    "rows": [
+     {
+      "cols": [
+       "a",
+       "b"
+      ]
+     },
+     {
+      "cols": [
+       "c"
+      ]
+     }
+    ]
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "0.0 0.1 1.0 "
   }
  ]
 }

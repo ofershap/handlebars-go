@@ -79,6 +79,18 @@ func TestGoldenDifferential(t *testing.T) {
 							}
 							return call.Params[0], nil
 						}
+					} else if spec == "__hash__" {
+						opts.Helpers[n] = func(call *HelperCall) (any, error) {
+							return stringify(call.Hash["first"]) + "-" + stringify(call.Hash["last"]), nil
+						}
+					} else if spec == "__block__" {
+						opts.Helpers[n] = func(call *HelperCall) (any, error) {
+							body, err := call.Fn(nil)
+							if err != nil {
+								return nil, err
+							}
+							return "B[" + body + "]", nil
+						}
 					} else {
 						s := spec
 						opts.Helpers[n] = func(call *HelperCall) (any, error) { return s, nil }
