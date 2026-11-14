@@ -132,7 +132,8 @@ func TestBlockParams(t *testing.T) {
 }
 
 func TestRawBlock(t *testing.T) {
-	got := render(t, "{{{{raw}}}}{{not-executed}}{{{{/raw}}}}", nil, nil)
+	opts := &Options{Helpers: map[string]Helper{"raw": RawHelper}}
+	got := render(t, "{{{{raw}}}}{{not-executed}}{{{{/raw}}}}", nil, opts)
 	if got != "{{not-executed}}" {
 		t.Fatal(got)
 	}

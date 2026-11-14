@@ -225,7 +225,7 @@ func (l *lexer) mustache() (token, error) {
 	start := l.pos
 	for l.pos < len(l.src) {
 		c := l.src[l.pos]
-		if unicode.IsSpace(rune(c)) || strings.ContainsRune("()=[]{}<>|*'\"=", rune(c)) {
+		if unicode.IsSpace(rune(c)) || strings.ContainsRune("()={}<>|*'\"", rune(c)) {
 			break
 		}
 		// "~}}" handled above; stop ident at "~}}" or "}}"

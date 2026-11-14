@@ -73,7 +73,11 @@ func (t *Template) Execute(ctx any, opts *Options) (string, error) {
 	for k, v := range opts.Partials {
 		st.partials[k] = v
 	}
-	root := &Frame{Value: ctx, Data: opts.Data, Parent: nil}
+	data := map[string]any{"root": ctx}
+	for k, v := range opts.Data {
+		data[k] = v
+	}
+	root := &Frame{Value: ctx, Data: data, Parent: nil}
 	var b strings.Builder
 	if err := st.execProgram(&b, t.prog, root); err != nil {
 		return "", err

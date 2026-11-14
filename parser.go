@@ -21,8 +21,9 @@ func Parse(src string) (*Template, error) {
 }
 
 type parser struct {
-	toks []token
-	pos  int
+	toks      []token
+	pos       int
+	blockOpen int
 }
 
 func (p *parser) cur() token  { return p.toks[p.pos] }
@@ -102,6 +103,8 @@ func (p *parser) closeAfter(kind tokenKind) (token, error) {
 
 func (p *parser) simpleMustache() (Node, error) {
 	open := p.bump() // tokOpen / tokOpenRaw / tokOpenAmp
+	trimL := open.val == "~"
+	_ = trimL
 	// {{else}} at top level of a block is handled by block(); here it is an error
 	e, err := p.expression(true)
 	if err != nil {
@@ -111,15 +114,17 @@ func (p *parser) simpleMustache() (Node, error) {
 	if open.kind == tokOpenRaw {
 		closeKind = tokCloseRaw
 	}
-	if _, err := p.closeAfter(closeKind); err != nil {
+	ct, err := p.closeAfter(closeKind)
+	if err != nil {
 		return nil, err
 	}
-	return &MustacheNode{Expr: e, Unescaped: open.kind != tokOpen}, nil
+	return &MustacheNode{Expr: e, Unescaped: open.kind != tokOpen, TrimLeft: trimL, TrimRight: ct.val == "~"}, nil
 }
 
 // block parses {{#expr}} body {{else}} inverse {{/name}}.
 func (p *parser) block(raw bool) (Node, error) {
 	inverted := p.cur().kind == tokOpenInverse
+	p.blockOpen = p.pos
 	p.bump() // opener
 	e, err := p.expression(true)
 	if err != nil {
@@ -145,7 +150,8 @@ func (p *parser) block(raw bool) (Node, error) {
 	if raw {
 		closeKind = tokCloseRawBlock
 	}
-	if _, err := p.closeAfter(closeKind); err != nil {
+	openClose, err := p.closeAfter(closeKind)
+	if err != nil {
 		return nil, err
 	}
 	name := exprHead(e)
@@ -213,7 +219,7 @@ func (p *parser) block(raw bool) (Node, error) {
 	if _, err := p.closeAfter(tokClose); err != nil {
 		return nil, err
 	}
-	bn := &BlockNode{Expr: e, Program: body, Inverse: inverse, BlockParams: blockParams}
+	bn := &BlockNode{Expr: e, Program: body, Inverse: inverse, BlockParams: blockParams, TrimLeft: p.toks[p.blockOpen].val == "~", TrimRight: openClose.val == "~"}
 	if inverted {
 		bn.Program, bn.Inverse = bn.Inverse, bn.Program
 	}
@@ -423,55 +429,188 @@ func baseName(s string) string {
 	return s
 }
 
-// stripStandalone removes whitespace-only lines around standalone block,
-// inverse, comment and partial tags, per the handlebars spec. Conservative:
-// only tags whose open and close sit alone on their line.
+// whitespace passes: standalone-line stripping (handlebars spec) and
+// explicit {{~ ~}} control. Runs over every program recursively.
+
 func stripStandalone(prog *Program) *Program {
-	// Implemented as a post-pass over the body list; content adjacent to a
-	// standalone tag loses the tag's line (indent before + newline after).
-	out := &Program{Body: make([]Node, 0, len(prog.Body))}
-	for i, n := range prog.Body {
-		switch n.(type) {
-		case *BlockNode, *CommentNode, *PartialNode:
-			// trim trailing spaces of previous content (up to and incl. its newline boundary)
-			if len(out.Body) > 0 {
-				if c, ok := out.Body[len(out.Body)-1].(*ContentNode); ok {
-					if trimmed, ok := trimLineTail(c.Text); ok {
-						c.Text = trimmed
-						// trim leading newline of next content
-						if i+1 < len(prog.Body) {
-							if nc, ok := prog.Body[i+1].(*ContentNode); ok {
-								nc.Text = trimLineHead(nc.Text)
-							}
+	wsPass(prog)
+	return prog
+}
+
+func wsPass(prog *Program) {
+	// recurse first
+	for _, n := range prog.Body {
+		if b, ok := n.(*BlockNode); ok {
+			if b.Program != nil {
+				wsPass(b.Program)
+			}
+			if b.Inverse != nil {
+				wsPass(b.Inverse)
+			}
+		}
+		if pt, ok := n.(*PartialNode); ok {
+			if pt.Fn != nil {
+				wsPass(pt.Fn)
+			}
+		}
+	}
+	body := prog.Body
+	contentAt := func(i int) (*ContentNode, bool) {
+		if i < 0 || i >= len(body) {
+			return nil, false
+		}
+		c, ok := body[i].(*ContentNode)
+		return c, ok
+	}
+	for i, n := range body {
+		switch n := n.(type) {
+		case *MustacheNode:
+			if n.TrimLeft {
+				if c, ok := contentAt(i - 1); ok {
+					c.Text = trimRightSpace(c.Text)
+				}
+			}
+			if n.TrimRight {
+				if c, ok := contentAt(i + 1); ok {
+					c.Text = trimLeftSpace(c.Text)
+				}
+			}
+		case *BlockNode:
+			// explicit ~ control
+			if n.TrimLeft {
+				if c, ok := contentAt(i - 1); ok {
+					c.Text = trimRightSpace(c.Text)
+				}
+			}
+			if n.TrimRight && n.Program != nil && len(n.Program.Body) > 0 {
+				if c, ok := n.Program.Body[0].(*ContentNode); ok {
+					c.Text = trimLeftSpace(c.Text)
+				}
+			}
+			// standalone open tag
+			prev, hasPrev := contentAt(i - 1)
+			next, hasNext := contentAt(i + 1)
+			prevTail, prevOK := standaloneTail(prev, hasPrev, i == 0)
+			if prevOK && n.Program != nil && len(n.Program.Body) > 0 {
+				if first, ok := n.Program.Body[0].(*ContentNode); ok {
+					if trimmed, ok := standaloneHead(first.Text); ok {
+						prev.Text = prevTail
+						first.Text = trimmed
+					}
+				}
+			}
+			// standalone close tag
+			inner := n.Program
+			if n.Inverse != nil {
+				inner = n.Inverse
+			}
+			if inner != nil && len(inner.Body) > 0 {
+				if last, ok := inner.Body[len(inner.Body)-1].(*ContentNode); ok {
+					lastTail, lastOK := standaloneTail(last, true, false)
+					nextHead, nextOK := standaloneHeadNext(next, hasNext, i == len(body)-1)
+					if lastOK && nextOK {
+						last.Text = lastTail
+						if hasNext {
+							next.Text = nextHead
 						}
 					}
 				}
 			}
+			// standalone inverse ({{else}}) tag
+			if n.Inverse != nil && n.Program != nil && len(n.Program.Body) > 0 && len(n.Inverse.Body) > 0 {
+				if last, ok := n.Program.Body[len(n.Program.Body)-1].(*ContentNode); ok {
+					if first, ok := n.Inverse.Body[0].(*ContentNode); ok {
+						lastTail, lastOK := standaloneTail(last, true, false)
+						firstHead, firstOK := standaloneHead(first.Text)
+						if lastOK && firstOK {
+							last.Text = lastTail
+							first.Text = firstHead
+						}
+					}
+				}
+			}
+		case *CommentNode:
+			prev, hasPrev := contentAt(i - 1)
+			next, hasNext := contentAt(i + 1)
+			prevTail, prevOK := standaloneTail(prev, hasPrev, i == 0)
+			nextHead, nextOK := standaloneHeadNext(next, hasNext, i == len(body)-1)
+			if prevOK && nextOK {
+				if hasPrev {
+					prev.Text = prevTail
+				}
+				if hasNext {
+					next.Text = nextHead
+				}
+			}
+		case *PartialNode:
+			prev, hasPrev := contentAt(i - 1)
+			next, hasNext := contentAt(i + 1)
+			prevTail, prevOK := standaloneTail(prev, hasPrev, i == 0)
+			nextHead, nextOK := standaloneHeadNext(next, hasNext, i == len(body)-1)
+			if prevOK && nextOK {
+				if hasPrev {
+					n.Indent = tailSpaces(prev.Text)
+					prev.Text = prevTail
+				}
+				if hasNext {
+					next.Text = nextHead
+				}
+			}
 		}
-		out.Body = append(out.Body, n)
 	}
-	return out
 }
 
-func trimLineTail(s string) (string, bool) {
+// standaloneTail: content before a tag. If its last line is spaces/tabs only,
+// returns the text with those spaces removed (keeping the newline), ok=true.
+// If the content is entirely spaces and atStart, the whole line is the tail.
+func standaloneTail(c *ContentNode, exists bool, atStart bool) (string, bool) {
+	if !exists {
+		return "", atStart // template start counts as line start
+	}
+	s := c.Text
 	i := strings.LastIndexByte(s, '\n')
 	tail := s[i+1:]
-	if strings.Trim(tail, " \t") == "" && (tail != "" || i >= 0) {
+	if i < 0 {
+		// no newline: the tag shares its line with whatever precedes this
+		// content, so it is standalone only at template start.
+		if atStart && strings.Trim(tail, " \t") == "" {
+			return "", true
+		}
+		return s, false
+	}
+	if strings.Trim(tail, " \t") == "" {
 		return s[:i+1], true
 	}
 	return s, false
 }
 
-func trimLineHead(s string) string {
+func tailSpaces(s string) string {
+	i := strings.LastIndexByte(s, '\n')
+	return s[i+1:]
+}
+
+// standaloneHead: content after a tag. If its first line is spaces/tabs then
+// a newline, returns the text after that newline, ok=true.
+func standaloneHead(s string) (string, bool) {
 	j := 0
 	for j < len(s) && (s[j] == ' ' || s[j] == '\t') {
 		j++
 	}
 	if j < len(s) && s[j] == '\n' {
-		return s[j+1:]
+		return s[j+1:], true
 	}
-	if j < len(s) && s[j] == '\r' && j+1 < len(s) && s[j+1] == '\n' {
-		return s[j+2:]
+	if j+1 < len(s) && s[j] == '\r' && s[j+1] == '\n' {
+		return s[j+2:], true
 	}
-	return s
+	return s, false
 }
+
+func standaloneHeadNext(c *ContentNode, exists bool, atEnd bool) (string, bool) {
+	if !exists {
+		return "", atEnd
+	}
+	return standaloneHead(c.Text)
+}
+
+func trimRightSpace(s string) string { return strings.TrimRight(s, " \t\r\n") }
+func trimLeftSpace(s string) string  { return strings.TrimLeft(s, " \t\r\n") }

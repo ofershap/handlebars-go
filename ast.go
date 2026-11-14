@@ -17,6 +17,8 @@ type CommentNode struct{}
 type MustacheNode struct {
 	Expr      *Expression
 	Unescaped bool
+	TrimLeft  bool // {{~
+	TrimRight bool // ~}}
 }
 
 // BlockNode is {{#expr}}...{{else}}...{{/expr}} (and ^ variants).
@@ -27,6 +29,8 @@ type BlockNode struct {
 	BlockParams []string
 	RawBlock    bool // {{{{helper}}}} form: body passed as raw string param
 	RawBody     string
+	TrimLeft    bool // open tag was {{~#
+	TrimRight   bool // open tag closed with ~}}
 }
 
 // PartialNode is {{> name context hash=...}} or {{> @partial-block}}.

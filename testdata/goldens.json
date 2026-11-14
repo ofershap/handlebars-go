@@ -1,0 +1,598 @@
+{
+ "generator": "handlebars@4.7.8",
+ "cases": [
+  {
+   "name": "interp-string",
+   "template": "Hello {{name}}!",
+   "context": {
+    "name": "World"
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "Hello World!"
+  },
+  {
+   "name": "interp-escape",
+   "template": "{{html}}",
+   "context": {
+    "html": "<b>&\"x\"</b>"
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "&lt;b&gt;&amp;&quot;x&quot;&lt;/b&gt;"
+  },
+  {
+   "name": "interp-triple",
+   "template": "{{{html}}}",
+   "context": {
+    "html": "<b>bold</b>"
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "<b>bold</b>"
+  },
+  {
+   "name": "interp-amp",
+   "template": "{{& html}}",
+   "context": {
+    "html": "<i>x</i>"
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "<i>x</i>"
+  },
+  {
+   "name": "interp-noescape-opt",
+   "template": "{{html}}",
+   "context": {
+    "html": "<u>y</u>"
+   },
+   "options": {
+    "noEscape": true
+   },
+   "partials": {},
+   "helpers": {},
+   "expected": "<u>y</u>"
+  },
+  {
+   "name": "path-dotted",
+   "template": "{{user.profile.name}}",
+   "context": {
+    "user": {
+     "profile": {
+      "name": "Dana"
+     }
+    }
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "Dana"
+  },
+  {
+   "name": "path-slashed",
+   "template": "{{user/profile/name}}",
+   "context": {
+    "user": {
+     "profile": {
+      "name": "Dana"
+     }
+    }
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "Dana"
+  },
+  {
+   "name": "path-this",
+   "template": "{{this}}",
+   "context": "scalar",
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "scalar"
+  },
+  {
+   "name": "path-this-dot",
+   "template": "{{this.name}}",
+   "context": {
+    "name": "N"
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "N"
+  },
+  {
+   "name": "path-index",
+   "template": "{{list.[1]}}",
+   "context": {
+    "list": [
+     "a",
+     "b",
+     "c"
+    ]
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "b"
+  },
+  {
+   "name": "path-parent",
+   "template": "{{#with a}}{{b}}/{{../c}}{{/with}}",
+   "context": {
+    "a": {
+     "b": "B"
+    },
+    "c": "C"
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "B/C"
+  },
+  {
+   "name": "missing-default",
+   "template": "[{{nope}}]",
+   "context": {},
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "[]"
+  },
+  {
+   "name": "missing-strict",
+   "template": "[{{nope}}]",
+   "context": {},
+   "options": {
+    "strict": true
+   },
+   "partials": {},
+   "helpers": {},
+   "expectError": true,
+   "error": "\"nope\" not defined in [object Object] - 1:3"
+  },
+  {
+   "name": "section-array",
+   "template": "{{#items}}{{this}};{{/items}}",
+   "context": {
+    "items": [
+     1,
+     2,
+     3
+    ]
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "1;2;3;"
+  },
+  {
+   "name": "section-object",
+   "template": "{{#obj}}{{k}}{{/obj}}",
+   "context": {
+    "obj": {
+     "k": "V"
+    }
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "V"
+  },
+  {
+   "name": "section-false-else",
+   "template": "{{#flag}}Y{{else}}N{{/flag}}",
+   "context": {
+    "flag": false
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "N"
+  },
+  {
+   "name": "section-empty-array-else",
+   "template": "{{#items}}x{{else}}empty{{/items}}",
+   "context": {
+    "items": []
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "empty"
+  },
+  {
+   "name": "inverted-section",
+   "template": "{{^items}}none{{/items}}",
+   "context": {
+    "items": []
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "none"
+  },
+  {
+   "name": "if-truthy",
+   "template": "{{#if user}}yes{{/if}}",
+   "context": {
+    "user": {
+     "a": 1
+    }
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "yes"
+  },
+  {
+   "name": "if-falsy-zero",
+   "template": "{{#if n}}yes{{else}}no{{/if}}",
+   "context": {
+    "n": 0
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "no"
+  },
+  {
+   "name": "if-include-zero",
+   "template": "{{#if n includeZero=true}}zero-in{{/if}}",
+   "context": {
+    "n": 0
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "zero-in"
+  },
+  {
+   "name": "if-empty-string",
+   "template": "{{#if s}}yes{{else}}no{{/if}}",
+   "context": {
+    "s": ""
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "no"
+  },
+  {
+   "name": "unless",
+   "template": "{{#unless ok}}not-ok{{/unless}}",
+   "context": {
+    "ok": false
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "not-ok"
+  },
+  {
+   "name": "each-index",
+   "template": "{{#each list}}{{@index}}:{{this}} {{/each}}",
+   "context": {
+    "list": [
+     "x",
+     "y"
+    ]
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "0:x 1:y "
+  },
+  {
+   "name": "each-first-last",
+   "template": "{{#each list}}{{#if @first}}F{{/if}}{{this}}{{#if @last}}L{{/if}};{{/each}}",
+   "context": {
+    "list": [
+     "a",
+     "b",
+     "c"
+    ]
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "Fa;b;cL;"
+  },
+  {
+   "name": "each-object-key",
+   "template": "{{#each obj}}{{@key}}={{this}};{{/each}}",
+   "context": {
+    "obj": {
+     "a": 1,
+     "b": 2
+    }
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "a=1;b=2;"
+  },
+  {
+   "name": "each-block-params",
+   "template": "{{#each list as |v i|}}{{i}}={{v}};{{/each}}",
+   "context": {
+    "list": [
+     "p",
+     "q"
+    ]
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "0=p;1=q;"
+  },
+  {
+   "name": "each-nested-lists",
+   "template": "{{#each groups}}{{#each items}}{{@key}};{{/each}}{{/each}}",
+   "context": {
+    "groups": [
+     {
+      "items": {
+       "x": 1
+      }
+     }
+    ]
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "x;"
+  },
+  {
+   "name": "with-basic",
+   "template": "{{#with user}}{{name}} ({{age}}){{/with}}",
+   "context": {
+    "user": {
+     "name": "A",
+     "age": 3
+    }
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "A (3)"
+  },
+  {
+   "name": "with-else",
+   "template": "{{#with missing}}X{{else}}none{{/with}}",
+   "context": {},
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "none"
+  },
+  {
+   "name": "helper-lookup",
+   "template": "{{lookup list 1}}",
+   "context": {
+    "list": [
+     "a",
+     "b"
+    ]
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "b"
+  },
+  {
+   "name": "helper-lookup-subexpr",
+   "template": "{{lookup list (lookup idx 0)}}",
+   "context": {
+    "list": [
+     "a",
+     "b"
+    ],
+    "idx": [
+     1
+    ]
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "b"
+  },
+  {
+   "name": "number-interp",
+   "template": "{{n}} {{f}}",
+   "context": {
+    "n": 42,
+    "f": 1.5
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "42 1.5"
+  },
+  {
+   "name": "bool-null-interp",
+   "template": "{{t}}|{{f}}|{{z}}",
+   "context": {
+    "t": true,
+    "f": false,
+    "z": null
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "true|false|"
+  },
+  {
+   "name": "comment-inline",
+   "template": "a{{! note }}b",
+   "context": {},
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "ab"
+  },
+  {
+   "name": "comment-long",
+   "template": "a{{!-- has }} inside --}}b",
+   "context": {},
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "ab"
+  },
+  {
+   "name": "whitespace-control",
+   "template": "  {{~name~}}  ",
+   "context": {
+    "name": "X"
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "X"
+  },
+  {
+   "name": "standalone-block",
+   "template": "A\n{{#if ok}}\nB\n{{/if}}\nC",
+   "context": {
+    "ok": true
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "A\nB\nC"
+  },
+  {
+   "name": "standalone-comment",
+   "template": "A\n{{! note }}\nB",
+   "context": {},
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "A\nB"
+  },
+  {
+   "name": "partial-basic",
+   "template": "{{> greeting}}",
+   "context": {
+    "name": "Bo"
+   },
+   "options": {},
+   "partials": {
+    "greeting": "Hi {{name}}"
+   },
+   "helpers": {},
+   "expected": "Hi Bo"
+  },
+  {
+   "name": "partial-context",
+   "template": "{{> greeting user}}",
+   "context": {
+    "user": {
+     "name": "Cy"
+    }
+   },
+   "options": {},
+   "partials": {
+    "greeting": "Hi {{name}}"
+   },
+   "helpers": {},
+   "expected": "Hi Cy"
+  },
+  {
+   "name": "partial-hash",
+   "template": "{{> greeting name=other}}",
+   "context": {
+    "name": "Bo",
+    "other": "Ov"
+   },
+   "options": {},
+   "partials": {
+    "greeting": "Hi {{name}}"
+   },
+   "helpers": {},
+   "expected": "Hi Ov"
+  },
+  {
+   "name": "raw-block",
+   "template": "{{{{raw}}}}{{unescaped}}{{{{/raw}}}}",
+   "context": {},
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": ""
+  },
+  {
+   "name": "root-ref",
+   "template": "{{#with a}}{{@root.top}}{{/with}}",
+   "context": {
+    "top": "T",
+    "a": {}
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "T"
+  },
+  {
+   "name": "depth-two-up",
+   "template": "{{#with a}}{{#with b}}{{../../c}}{{/with}}{{/with}}",
+   "context": {
+    "a": {
+     "b": {}
+    },
+    "c": "deep"
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "deep"
+  },
+  {
+   "name": "hash-args",
+   "template": "{{#if cond}}Y{{/if}}",
+   "context": {
+    "cond": true
+   },
+   "options": {},
+   "partials": {},
+   "helpers": {},
+   "expected": "Y"
+  },
+  {
+   "name": "known-helpers-only",
+   "template": "{{unknownFn 1}}",
+   "context": {},
+   "options": {
+    "knownHelpersOnly": true,
+    "knownHelpers": {
+     "if": true
+    }
+   },
+   "partials": {},
+   "helpers": {},
+   "expectError": true,
+   "error": "You specified knownHelpersOnly, but used the unknown helper unknownFn - 1:0"
+  },
+  {
+   "name": "string-params",
+   "template": "{{echo missing.path}}",
+   "context": {},
+   "options": {
+    "stringParams": true
+   },
+   "partials": {},
+   "helpers": {
+    "echo": "__param0__"
+   },
+   "expected": "missing.path"
+  }
+ ]
+}

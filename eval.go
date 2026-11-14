@@ -2,7 +2,6 @@ package handlebars
 
 import (
 	"fmt"
-	"html"
 	"reflect"
 	"strconv"
 	"strings"
@@ -78,7 +77,7 @@ func (s *state) execMustache(b *strings.Builder, n *MustacheNode, f *Frame) erro
 	}
 	out := stringify(v)
 	if !n.Unescaped && !s.opts.NoEscape {
-		out = html.EscapeString(out)
+		out = escapeHTML(out)
 	}
 	b.WriteString(out)
 	return nil

@@ -13,7 +13,6 @@ var builtinHelpers = map[string]Helper{
 	"with":               helperWith,
 	"lookup":             helperLookup,
 	"log":                helperLog,
-	"raw":                helperRaw,
 	"blockHelperMissing": helperBlockMissing,
 	"helperMissing":      helperMissingDefault,
 }
@@ -183,8 +182,9 @@ func helperLog(c *HelperCall) (any, error) {
 	return nil, nil
 }
 
-// helperRaw renders a {{{{raw}}}} block verbatim.
-func helperRaw(c *HelperCall) (any, error) {
+// RawHelper renders a {{{{raw}}}} block verbatim. handlebars.js ships no
+// raw helper; register it explicitly: Options.Helpers["raw"] = handlebars.RawHelper.
+func RawHelper(c *HelperCall) (any, error) {
 	return c.RawBody, nil
 }
 
