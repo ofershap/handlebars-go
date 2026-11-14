@@ -77,9 +77,14 @@ func (s *state) execMustache(b *strings.Builder, n *MustacheNode, f *Frame) erro
 	if err != nil {
 		return err
 	}
-	out := stringify(v)
-	if !n.Unescaped && !s.opts.NoEscape {
-		out = escapeHTML(out)
+	var out string
+	if ss, ok := v.(SafeString); ok {
+		out = string(ss) // explicitly marked safe; skips escaping like handlebars.js
+	} else {
+		out = stringify(v)
+		if !n.Unescaped && !s.opts.NoEscape {
+			out = escapeHTML(out)
+		}
 	}
 	b.WriteString(out)
 	return nil
@@ -204,7 +209,17 @@ func (s *state) renderSection(b *strings.Builder, n *BlockNode, v any, f *Frame)
 	return s.execProgram(b, n.Inverse, f)
 }
 
+// maxPartialDepth bounds partial recursion. Recursive partials are legal in
+// handlebars (tree rendering), so they work here up to this depth; beyond it
+// Render returns an error instead of exhausting the goroutine stack.
+const maxPartialDepth = 100
+
 func (s *state) execPartial(b *strings.Builder, n *PartialNode, f *Frame) error {
+	if s.depth >= maxPartialDepth {
+		return &TemplateError{Msg: fmt.Sprintf("partial recursion deeper than %d (recursive partials are supported up to this depth)", maxPartialDepth)}
+	}
+	s.depth++
+	defer func() { s.depth-- }()
 	name := n.Name
 	if n.DynamicName != nil {
 		v, err := s.evalExpr(n.DynamicName, f)
@@ -479,6 +494,9 @@ func resolveParts(v any, parts []string) (any, bool) {
 		}
 		switch rv.Kind() {
 		case reflect.Map:
+			if strings.HasPrefix(part, "__") {
+				return nil, false // reserved-key guard, parity with handlebars.js __proto__ protection
+			}
 			kv := reflect.ValueOf(part)
 			if kv.Type().AssignableTo(rv.Type().Key()) {
 				mv := rv.MapIndex(kv)

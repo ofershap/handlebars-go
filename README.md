@@ -2,16 +2,16 @@
 
 ![handlebars-go](assets/hero.png)
 
-The Go handlebars port everyone reaches for lists **14 unimplemented options and features in its own README**, and its last code commit was in 2018. This library implements them.
+[aymerick/raymond](https://github.com/aymerick/raymond), the 643-star Go Handlebars port, lists **14 unimplemented options and features in its own README**, and its last code commit was in 2018. `handlebars-go` implements 12 of the 14 and names the 2 it does not (see the matrix below).
 
-`handlebars-go` renders [Handlebars](https://handlebarsjs.com/) templates in pure Go, differentially tested against handlebars.js 4.7.8 itself. Stdlib-only, no dependencies.
+It renders [Handlebars](https://handlebarsjs.com/) templates in pure Go, differentially tested against handlebars.js 4.7.8 itself. Stdlib-only, no dependencies.
 
 ## What it does
 
-- **Full option surface**: `strict`, `noEscape`, `compat`, `knownHelpers`, `knownHelpersOnly`, `assumeObjects`, `preventIndent`, `stringParams`, `trackIds`: the nine options raymond's README says it never implemented.
+- **All nine documented option flags**: `strict`, `noEscape`, `compat`, `knownHelpers`, `knownHelpersOnly`, `assumeObjects`, `preventIndent`, `stringParams`, `trackIds`: the nine options raymond's README says it never implemented.
 - **The missing hooks**: `helperMissing` and `blockHelperMissing`, plus raw blocks (`{{{{helper}}}}...{{{{/helper}}}}` with the body passed verbatim).
 - **Differentially tested**: 71 golden fixtures generated from **handlebars.js 4.7.8** (see `testdata/gen/`) covering interpolation, paths, sections, inverted sections, `each`/`with`/`if`/`unless`/`lookup`, subexpressions, partials (context, hash, indentation, nested), whitespace control, standalone lines, comments, `@root`, `@index`/`@key`/`@first`/`@last`, block params, and the option flags above. The test suite renders every fixture and compares byte-for-byte.
-- **Fuzz-verified parser**: `go fuzz` ran 1.45M generated inputs with zero panics (it did find two real bugs before that, both fixed). That's test evidence, not a proof.
+- **Fuzz-verified parser**: `go fuzz` ran 1.45M generated inputs with zero panics (it found a real nil-pointer bug before that, fixed and regression-covered). That's test evidence, not a proof.
 - **Typed errors**: `TemplateError` names the line and column and quotes the offending text.
 - **Fast enough to template in hot paths**: rendering `"Hello {{user.name}}! {{#each user.tags}}…"` measured 5.0µs/op, parsing the same template 6.1µs/op (BenchmarkExecute/BenchmarkParse, GitHub-hosted runner class machine; see `bench_test.go`).
 - **HTML-escapes by default** with handlebars.js' exact escape map (`& < > " ' \` =`); `{{{triple}}}`, `{{& amp}}`, or `noEscape` to bypass.
@@ -19,7 +19,7 @@ The Go handlebars port everyone reaches for lists **14 unimplemented options and
 ## What it doesn't do
 
 - **Decorators, inline partials, and partial-block**: not implemented yet (`{{#* inline}}` and `{{> @partial-block}}` are parse errors for now).
-- **`@level` / log levels**: a plain `log` helper ships; the level plumbing does not.
+- **`@contextPath` and `@level`**: the two raymond-limitation items this library also does not implement (the trackIds metadata var and log-level plumbing). A plain `log` helper ships.
 - **JS insertion-order map iteration**: Go maps have no insertion order, so `{{#each}}` over a map iterates **sorted keys**. Named dialect difference: handlebars.js preserves insertion order.
 - **No default `raw` helper**: same as handlebars.js. Register the shipped one explicitly: `handlebars.RawHelper`.
 - **Not a raymond API clone**: similar shape (`Parse`/`Execute`/`Render`), not a drop-in replacement.
@@ -82,7 +82,26 @@ _, err := handlebars.Render("{{user.nmae}}", ctx, opts) // typo caught at render
 
 ## Compared to raymond
 
-[aymerick/raymond](https://github.com/aymerick/raymond) (tested at commit `7c01a03`, 643 stars) is the incumbent. Its README's own *Limitations* section lists the nine options and five features above as not implemented; its last code commit is from March 2018. Everything in its limitations list works here, and the behavior that does overlap is verified against handlebars.js 4.7.8 rather than self-authored expectations.
+[aymerick/raymond](https://github.com/aymerick/raymond) (tested at commit `7c01a03`, 643 stars) is the incumbent. Its README's own *Limitations* section lists nine options and five features as not implemented; its last code commit is from March 2018. Here is every item, honestly:
+
+| raymond README limitation | handlebars-go | Verified by |
+|---|---|---|
+| `strict` option | implemented | golden `missing-strict` |
+| `noEscape` | implemented | golden `interp-noescape-opt` |
+| `compat` (recursive lookup) | implemented | goldens `compat-recursive`, `no-compat-no-recursive` |
+| `knownHelpers` | implemented | unit `TestKnownHelpers` |
+| `knownHelpersOnly` | implemented | golden `known-helpers-only` |
+| `trackIds` | implemented | unit `TestTrackIds` |
+| `assumeObjects` | implemented | golden `assume-objects` |
+| `preventIndent` | implemented | golden `partial-prevent-indent` |
+| `stringParams` | implemented | golden `string-params` |
+| raw block content param | implemented | golden `raw-block` (register `RawHelper`) |
+| `blockHelperMissing` hook | implemented | golden `block-helper-missing-hook` |
+| `helperMissing` hook | implemented | golden `helper-missing-hook` |
+| `@contextPath` (trackIds mode) | **not implemented** | listed in What it doesn't do |
+| `@level` / log levels | **not implemented** | listed in What it doesn't do |
+
+12 of 14. Where behavior overlaps with raymond, this library verifies against handlebars.js 4.7.8 itself (golden fixtures), not self-authored expectations.
 
 ## Differential testing
 
@@ -113,7 +132,14 @@ Yes: `&handlebars.Options{Strict: true}` turns missing fields into `TemplateErro
 
 <details>
 <summary><b>Is it safe to render untrusted templates?</b></summary>
-The parser is fuzz-verified (1.45M generated inputs, zero panics) and all errors are typed. HTML output is escaped by default with handlebars.js' exact escape map. Like any template engine, helpers you register run with your program's privileges, so treat custom helpers as code. This library is early-stage and has not been independently audited.
+
+The trust boundary, plainly:
+
+- **Template text = code-author trust.** A template names helpers and partials, and helpers run with your program's privileges (verified in `security_test.go`). `{{triple}}` / `{{& amp}}` / `SafeString` bypass HTML escaping by design. Do not render template text authored by an untrusted party. There is no sandbox and this library makes no sandbox claim.
+- **Template data may be hostile.** All value output is escaped by default with handlebars.js' exact escape map. Map keys beginning with `__` are not accessible (parity with handlebars.js' `__proto__` guard). Exported zero-arg methods on data structs ARE callable from templates (raymond-compatible), so pass only data you are comfortable exposing.
+- **Hostile template TEXT**: the parser is fuzz-verified (1.45M generated inputs, zero panics) and errors are typed with line/column. Recursive partials stop at depth 100 with an error; 2000-deep nested blocks are covered by test.
+- **No resource caps.** Output size and loop counts are bounded by your data, not by the engine (a 100k-iteration `each` will produce 100k iterations of output). If data size is attacker-controlled, bound it before rendering.
+- Early-stage library; not independently audited.
 </details>
 
 <details>

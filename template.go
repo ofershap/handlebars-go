@@ -2,6 +2,11 @@ package handlebars
 
 import "strings"
 
+// SafeString marks a helper return value as already-safe HTML, bypassing
+// escaping - the same contract as Handlebars.SafeString in handlebars.js.
+// Only wrap content you have already sanitized.
+type SafeString string
+
 // Template is a compiled handlebars template. Safe for concurrent Execute.
 type Template struct {
 	src  string

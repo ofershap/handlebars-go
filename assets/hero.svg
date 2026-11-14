@@ -4,12 +4,12 @@
   <circle cx="105" cy="90" r="9" fill="#ff5f57"/>
   <circle cx="135" cy="90" r="9" fill="#febc2e"/>
   <circle cx="165" cy="90" r="9" fill="#28c840"/>
-  <text x="640" y="95" font-family="monospace" font-size="20" fill="#8b949e" text-anchor="middle">handlebars-go — full handlebars.js 4.x in pure Go</text>
+  <text x="640" y="95" font-family="monospace" font-size="20" fill="#8b949e" text-anchor="middle">handlebars-go - handlebars.js 4.7.8 dialect in pure Go</text>
   <text x="100" y="170" font-family="monospace" font-size="30" fill="#79c0ff">template := &#34;Hello {{user.name}}! {{#each user.tags}}#{{this}} {{/each}}&#34;</text>
   <text x="100" y="230" font-family="monospace" font-size="30" fill="#a5d6ff">out, _ := handlebars.Render(template, ctx, nil)</text>
   <line x1="100" y1="270" x2="1180" y2="270" stroke="#30363d" stroke-width="2"/>
   <text x="100" y="330" font-family="monospace" font-size="30" fill="#3fb950">Hello Dana! #go #templates</text>
-  <text x="100" y="420" font-family="monospace" font-size="24" fill="#d2a8ff">strict · knownHelpers · trackIds · stringParams · noEscape · compat</text>
+  <text x="100" y="420" font-family="monospace" font-size="24" fill="#d2a8ff">strict, knownHelpers, trackIds, stringParams, noEscape, compat</text>
   <text x="100" y="465" font-family="monospace" font-size="24" fill="#d2a8ff">assumeObjects · preventIndent · helperMissing · blockHelperMissing · raw blocks</text>
   <text x="100" y="545" font-family="monospace" font-size="24" fill="#8b949e">71/71 golden fixtures vs handlebars.js 4.7.8 · 1.45M fuzz execs clean · stdlib-only</text>
 </svg>
