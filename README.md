@@ -2,9 +2,7 @@
 
 ![handlebars-go](assets/hero.png)
 
-[aymerick/raymond](https://github.com/aymerick/raymond), the 643-star Go Handlebars port, lists **14 unimplemented options and features in its own README**, and its last code commit was in 2018. `handlebars-go` implements 12 of the 14 and names the 2 it does not (see the matrix below).
-
-It renders [Handlebars](https://handlebarsjs.com/) templates in pure Go, differentially tested against handlebars.js 4.7.8 itself. Stdlib-only, no dependencies.
+Your Go service needs to render the same Handlebars templates your JavaScript frontend already compiles - welcome emails, invoice pages, notification bodies - without porting them to a second, subtly different template dialect. `handlebars-go` renders [Handlebars](https://handlebarsjs.com/) templates in pure Go, differentially tested against handlebars.js 4.7.8 itself: same output bytes on every tested template. Stdlib-only, no dependencies.
 
 ## What it does
 
