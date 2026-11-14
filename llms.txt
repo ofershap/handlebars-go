@@ -1,0 +1,21 @@
+# handlebars-go
+
+> Handlebars templates in pure Go (github.com/ofershap/handlebars-go),
+> differentially tested against handlebars.js 4.7.8: 71 golden fixtures
+> compare byte-for-byte. All nine documented option flags (strict, noEscape,
+> compat, knownHelpers, knownHelpersOnly, assumeObjects, preventIndent,
+> stringParams, trackIds), helperMissing/blockHelperMissing, raw blocks,
+> partials, subexpressions, block params. Standard library only, no
+> dependencies.
+
+## Usage
+
+- out, err := handlebars.Render(templateSource, data, nil); handlebars.MustRender panics on error; Parse once and Execute many for hot paths.
+- Typed TemplateError names line and column and quotes the offending text - built for agent pipelines.
+- Named dialect difference: Go maps iterate sorted keys (handlebars.js preserves insertion order); use slices for ordered output.
+- Escaping matches handlebars.js exactly; SafeString and triple-stash bypass by design.
+
+## Docs
+
+- [README](https://github.com/ofershap/handlebars-go#readme): install, option matrix, fixture coverage, security notes, Q&A
+- [pkg.go.dev](https://pkg.go.dev/github.com/ofershap/handlebars-go): library API

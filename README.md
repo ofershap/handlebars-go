@@ -149,15 +149,28 @@ Yes, that's a design goal: reports, prompts, and multi-file agent output. Strict
 
 ---
 
-<p align="center">
-<a href="https://gitshow.dev/ofershap/cron-utils">cron-utils</a> ·
-<a href="https://gitshow.dev/ofershap/handlebars-go">handlebars-go</a> ·
-<a href="https://gitshow.dev/ofershap/json5">json5</a> ·
-<a href="https://gitshow.dev/ofershap/poppy-go">poppy-go</a> ·
-<a href="https://gitshow.dev/ofershap/gailwind">gailwind</a> ·
-<a href="https://gitshow.dev/ofershap/lather">lather</a>
-</p>
+## Contributing
 
-![Go](https://img.shields.io/badge/go-stdlib--only-blue) ![tests](https://img.shields.io/badge/golden%20fixtures-71%2F71-brightgreen) ![fuzz](https://img.shields.io/badge/fuzz-1.45M%20execs%20clean-brightgreen) ![license](https://img.shields.io/badge/license-MIT-green)
+Issues and PRs welcome - see [CONTRIBUTING.md](CONTRIBUTING.md). Please report security issues privately per [SECURITY.md](SECURITY.md).
 
-Built with [README Builder](https://github.com/ofershap/agentsmd). MIT © Ofer Shapira.
+---
+
+More projects: [gitshow](https://github.com/ofershap/gitshow) · [real-browser-mcp](https://github.com/ofershap/real-browser-mcp) · [cursor-usage-tracker](https://github.com/ofershap/cursor-usage-tracker) · [mcp-server-markdown](https://github.com/ofershap/mcp-server-markdown) · [readme-builder](https://github.com/ofershap/readme-builder) · [grok-bot-skills](https://github.com/ofershap/grok-bot-skills) · [mashov-parent-brief](https://github.com/ofershap/mashov-parent-brief) · [gailwind](https://github.com/ofershap/gailwind) · [lather](https://github.com/ofershap/lather)
+
+---
+
+## Author
+
+[![Made by ofershap](https://gitshow.dev/api/card/ofershap)](https://gitshow.dev/ofershap)
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0A66C2?style=flat&logo=linkedin&logoColor=white)](https://linkedin.com/in/ofershap)
+[![GitHub](https://img.shields.io/badge/GitHub-Follow-181717?style=flat&logo=github&logoColor=white)](https://github.com/ofershap)
+[![Blog](https://img.shields.io/badge/Blog-ofershap.github.io-FF5722?style=flat&logo=rss&logoColor=white)](https://ofershap.github.io/)
+
+---
+
+<sub>README built with [README Builder](https://ofershap.github.io/readme-builder/)</sub>
+
+## License
+
+[MIT](LICENSE) &copy; [Ofer Shapira](https://github.com/ofershap).
