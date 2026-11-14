@@ -25,11 +25,13 @@ func lex(src string) ([]token, error) {
 }
 
 type lexer struct {
-	src    string
-	pos    int
-	line   int
-	col    int
-	inMust bool // inside a {{ ... }} expression
+	src        string
+	pos        int
+	line       int
+	col        int
+	inMust     bool // inside a {{ ... }} expression
+	rawMode    bool // inside a {{{{raw}}}} body: verbatim content
+	rawClosing bool // currently lexing the {{{{/name}}}} closer
 }
 
 func (l *lexer) errf(msg, text string) error {
@@ -61,6 +63,14 @@ func (l *lexer) next() (token, error) {
 	if l.pos >= len(l.src) {
 		return token{kind: tokEOF, line: l.line + 1, col: l.col + 1}, nil
 	}
+	if l.rawMode {
+		if strings.HasPrefix(l.peek(5), "{{{{/") {
+			l.rawMode = false
+			l.rawClosing = true
+			return l.mustache()
+		}
+		return l.rawContent()
+	}
 	if !l.inMust {
 		if strings.HasPrefix(l.peek(2), "{{") {
 			return l.mustache()
@@ -68,6 +78,18 @@ func (l *lexer) next() (token, error) {
 		return l.content()
 	}
 	return l.mustache()
+}
+
+// rawContent consumes verbatim text up to the {{{{/ closer.
+func (l *lexer) rawContent() (token, error) {
+	line, col := l.line+1, l.col+1
+	i := strings.Index(l.src[l.pos:], "{{{{/")
+	if i < 0 {
+		return token{}, l.errf("unclosed raw block", "{{{{")
+	}
+	start := l.pos
+	l.advance(i)
+	return token{kind: tokContent, val: l.src[start:l.pos], line: line, col: col}, nil
 }
 
 // content consumes raw text up to the next mustache opener.
@@ -141,6 +163,11 @@ func (l *lexer) mustache() (token, error) {
 	case strings.HasPrefix(l.peek(4), "}}}}"):
 		l.advance(4)
 		l.inMust = false
+		if l.rawClosing {
+			l.rawClosing = false
+		} else {
+			l.rawMode = true
+		}
 		return token{kind: tokCloseRawBlock, line: line, col: col}, nil
 	case strings.HasPrefix(l.peek(3), "}}}"):
 		l.advance(3)

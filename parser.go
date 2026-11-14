@@ -224,42 +224,36 @@ func (p *parser) peekIsElse() bool {
 	return p.pos+1 < len(p.toks) && p.toks[p.pos+1].kind == tokElse
 }
 
-// rawBody consumes content until {{{{/name}}}}.
+// rawBody reads the verbatim body token emitted in raw mode plus its closer.
 func (p *parser) rawBody(name string) (string, error) {
-	// raw blocks come from the lexer as content/interleaved tokens; simplest
-	// correct route: re-scan is overkill, so accumulate content tokens.
-	var b strings.Builder
-	for {
-		t := p.cur()
-		if t.kind == tokEOF {
-			return "", p.errf(t, "unclosed raw block "+name)
-		}
-		if t.kind == tokOpenRawBlock {
-			// expect /name }}}}
-			p.bump()
-			if p.cur().kind == tokSlash {
-				p.bump()
-				ct := p.cur()
-				if ct.kind == tokIdent && ct.val == name {
-					p.bump()
-					if p.cur().kind == tokCloseRawBlock {
-						p.bump()
-						return b.String(), nil
-					}
-				}
-				return "", p.errf(ct, "raw block closer does not match "+name)
-			}
-			// nested raw block opener: treat literally
-			b.WriteString("{{{{")
-			continue
-		}
-		if t.kind == tokContent {
-			b.WriteString(t.val)
-			p.bump()
-			continue
-		}
-		return "", p.errf(t, "unexpected token inside raw block")
+	t := p.cur()
+	if t.kind == tokEOF {
+		return "", p.errf(t, "unclosed raw block "+name)
 	}
+	var body string
+	if t.kind == tokContent {
+		body = t.val
+		p.bump()
+	}
+	// closer: tokOpenRawBlock tokSlash tokIdent tokCloseRawBlock
+	if p.cur().kind != tokOpenRawBlock {
+		return "", p.errf(p.cur(), "expected raw block closer for "+name)
+	}
+	p.bump()
+	if p.cur().kind != tokSlash {
+		return "", p.errf(p.cur(), "expected raw block closer for "+name)
+	}
+	p.bump()
+	ct := p.cur()
+	if ct.kind != tokIdent || ct.val != name {
+		return "", p.errf(ct, "raw block closer does not match "+name)
+	}
+	p.bump()
+	if p.cur().kind != tokCloseRawBlock {
+		return "", p.errf(p.cur(), "expected }}}} after raw block closer")
+	}
+	p.bump()
+	return body, nil
 }
 
 func (p *parser) partial() (Node, error) {
