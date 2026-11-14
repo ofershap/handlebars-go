@@ -2,13 +2,13 @@
 
 ![handlebars-go](assets/hero.png)
 
-The Go handlebars port everyone reaches for lists **14 unimplemented options and features in its own README** — and its last code commit was in 2018. This library implements them.
+The Go handlebars port everyone reaches for lists **14 unimplemented options and features in its own README**, and its last code commit was in 2018. This library implements them.
 
 `handlebars-go` renders [Handlebars](https://handlebarsjs.com/) templates in pure Go, differentially tested against handlebars.js 4.7.8 itself. Stdlib-only, no dependencies.
 
 ## What it does
 
-- **Full option surface**: `strict`, `noEscape`, `compat`, `knownHelpers`, `knownHelpersOnly`, `assumeObjects`, `preventIndent`, `stringParams`, `trackIds` — the nine options raymond's README says it never implemented.
+- **Full option surface**: `strict`, `noEscape`, `compat`, `knownHelpers`, `knownHelpersOnly`, `assumeObjects`, `preventIndent`, `stringParams`, `trackIds`: the nine options raymond's README says it never implemented.
 - **The missing hooks**: `helperMissing` and `blockHelperMissing`, plus raw blocks (`{{{{helper}}}}...{{{{/helper}}}}` with the body passed verbatim).
 - **Differentially tested**: 71 golden fixtures generated from **handlebars.js 4.7.8** (see `testdata/gen/`) covering interpolation, paths, sections, inverted sections, `each`/`with`/`if`/`unless`/`lookup`, subexpressions, partials (context, hash, indentation, nested), whitespace control, standalone lines, comments, `@root`, `@index`/`@key`/`@first`/`@last`, block params, and the option flags above. The test suite renders every fixture and compares byte-for-byte.
 - **Fuzz-verified parser**: `go fuzz` ran 1.45M generated inputs with zero panics (it did find two real bugs before that, both fixed). That's test evidence, not a proof.
@@ -18,11 +18,11 @@ The Go handlebars port everyone reaches for lists **14 unimplemented options and
 
 ## What it doesn't do
 
-- **Decorators, inline partials (`{{#* inline}}`) and `{{> @partial-block}}`** — not implemented yet.
-- **`@level` / log levels** — a plain `log` helper ships; the level plumbing does not.
-- **JS insertion-order map iteration** — Go maps have no insertion order, so `{{#each}}` over a map iterates **sorted keys**. Named dialect difference: handlebars.js preserves insertion order.
-- **No default `raw` helper** — same as handlebars.js. Register the shipped one explicitly: `handlebars.RawHelper`.
-- **Not a raymond API clone** — similar shape (`Parse`/`Execute`/`Render`), not a drop-in replacement.
+- **Decorators, inline partials (`{{#* inline}}`) and `{{> @partial-block}}`: not implemented yet.
+- **`@level` / log levels**: a plain `log` helper ships; the level plumbing does not.
+- **JS insertion-order map iteration**: Go maps have no insertion order, so `{{#each}}` over a map iterates **sorted keys**. Named dialect difference: handlebars.js preserves insertion order.
+- **No default `raw` helper**: same as handlebars.js. Register the shipped one explicitly: `handlebars.RawHelper`.
+- **Not a raymond API clone**: similar shape (`Parse`/`Execute`/`Render`), not a drop-in replacement.
 - Early stage: not yet independently reviewed. Report issues freely.
 
 ## Install
@@ -98,7 +98,7 @@ Cases where the two engines intentionally differ (map iteration order) are exclu
 
 <details>
 <summary><b>How do I render Handlebars templates in Go?</b></summary>
-`go get github.com/ofershap/handlebars-go`, then `handlebars.Render(template, context, nil)`. For repeated renders, `Parse` once and call `Execute` per context — it's about 5µs per render of a small template.
+`go get github.com/ofershap/handlebars-go`, then `handlebars.Render(template, context, nil)`. For repeated renders, `Parse` once and call `Execute` per context; it's about 5µs per render of a small template.
 </details>
 
 <details>
@@ -113,12 +113,12 @@ Yes: `&handlebars.Options{Strict: true}` turns missing fields into `TemplateErro
 
 <details>
 <summary><b>Is it safe to render untrusted templates?</b></summary>
-The parser is fuzz-verified (1.45M generated inputs, zero panics) and all errors are typed. HTML output is escaped by default with handlebars.js' exact escape map. Like any template engine, helpers you register run with your program's privileges — treat custom helpers as code. This library is early-stage and has not been independently audited.
+The parser is fuzz-verified (1.45M generated inputs, zero panics) and all errors are typed. HTML output is escaped by default with handlebars.js' exact escape map. Like any template engine, helpers you register run with your program's privileges, so treat custom helpers as code. This library is early-stage and has not been independently audited.
 </details>
 
 <details>
 <summary><b>Can I use it for LLM/agent output templating?</b></summary>
-Yes — that's a design goal: reports, prompts, and multi-file agent output. Strict mode and typed errors are aimed at agent pipelines where a silently-empty `{{field}}` is a bug, not a feature.
+Yes, that's a design goal: reports, prompts, and multi-file agent output. Strict mode and typed errors are aimed at agent pipelines where a silently-empty `{{field}}` is a bug, not a feature.
 </details>
 
 ---
