@@ -110,7 +110,7 @@ func (s *state) execBlockHelper(b *strings.Builder, n *BlockNode, f *Frame, h He
 	if err != nil {
 		return err
 	}
-	call := &HelperCall{Params: params, Hash: hash, Frame: f, Ids: ids, RawBody: n.RawBody}
+	call := &HelperCall{Params: params, Hash: hash, Frame: f, Ids: ids, RawBody: n.RawBody, BlockParams: make([]any, len(n.BlockParams))}
 	call.Fn = func(ctx any) (string, error) {
 		nf := &Frame{Value: pick(ctx, f.Value), Parent: f, Data: f.Data}
 		if len(n.BlockParams) > 0 {
@@ -342,6 +342,9 @@ func (s *state) evalParams(exprs []*Expression, f *Frame) ([]any, []string, erro
 		v, err := s.evalExpr(e, f)
 		if err != nil {
 			return nil, nil, err
+		}
+		if v == nil && s.opts.StringParams && e.Path != nil {
+			v = e.Path.Original
 		}
 		out[i] = v
 		if s.opts.TrackIds && e.Path != nil {

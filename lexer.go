@@ -111,6 +111,9 @@ func (l *lexer) mustache() (token, error) {
 					t.val = "~"
 				}
 				if o.kind == tokOpenComment {
+					if o.pat == "{{!--" {
+						t.val = "long"
+					}
 					return l.comment(t)
 				}
 				l.inMust = true

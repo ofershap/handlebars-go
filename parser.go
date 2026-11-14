@@ -340,7 +340,7 @@ func (p *parser) expression(head bool) (*Expression, error) {
 		if head {
 			for {
 				nt := p.cur()
-				if nt.kind == tokClose || nt.kind == tokCloseRaw || nt.kind == tokCloseRawBlock || nt.kind == tokEOF {
+				if nt.kind == tokClose || nt.kind == tokCloseRaw || nt.kind == tokCloseRawBlock || nt.kind == tokEOF || nt.kind == tokCloseSexpr || nt.kind == tokAs {
 					break
 				}
 				// hash arg?
