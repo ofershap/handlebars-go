@@ -315,7 +315,7 @@ func (s *state) evalExpr(e *Expression, f *Frame) (any, error) {
 		return s.evalExpr(e.Sub, f)
 	}
 	head := baseName(e.Path.Original)
-	if h, ok := s.lookupHelper(head); ok && (len(e.Params) > 0 || len(e.Hash) > 0 || !isContextPath(e.Path, f)) {
+	if h, ok := s.lookupHelper(head); ok && (len(e.Params) > 0 || len(e.Hash) > 0 || s.opts.KnownHelpers[head] || !isContextPath(e.Path, f)) {
 		params, ids, err := s.evalParams(e.Params, f)
 		if err != nil {
 			return nil, err
@@ -355,7 +355,10 @@ func (s *state) evalExpr(e *Expression, f *Frame) (any, error) {
 
 func (s *state) evalParams(exprs []*Expression, f *Frame) ([]any, []string, error) {
 	out := make([]any, len(exprs))
-	ids := make([]string, len(exprs))
+	var ids []string
+	if s.opts.TrackIds {
+		ids = make([]string, len(exprs))
+	}
 	for i, e := range exprs {
 		v, err := s.evalExpr(e, f)
 		if err != nil {

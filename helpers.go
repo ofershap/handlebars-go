@@ -73,6 +73,9 @@ func helperEach(c *HelperCall) (any, error) {
 	if len(c.Params) < 1 {
 		return nil, &TemplateError{Msg: "#each requires one parameter"}
 	}
+	if c.Fn == nil {
+		return nil, &TemplateError{Msg: "#each must be used as a block helper: {{#each items}}...{{/each}}"}
+	}
 	rv := indirect(reflect.ValueOf(c.Params[0]))
 	if !rv.IsValid() {
 		if c.Inverse != nil {
@@ -131,6 +134,9 @@ func helperEach(c *HelperCall) (any, error) {
 func helperWith(c *HelperCall) (any, error) {
 	if len(c.Params) < 1 {
 		return nil, &TemplateError{Msg: "#with requires one parameter"}
+	}
+	if c.Fn == nil {
+		return nil, &TemplateError{Msg: "#with must be used as a block helper: {{#with ctx}}...{{/with}}"}
 	}
 	if !truthy(c.Params[0]) {
 		if c.Inverse != nil {
