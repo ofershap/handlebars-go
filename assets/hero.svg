@@ -11,5 +11,5 @@
   <text x="100" y="330" font-family="monospace" font-size="30" fill="#3fb950">Hello Dana! #go #templates</text>
   <text x="100" y="420" font-family="monospace" font-size="24" fill="#d2a8ff">strict, knownHelpers, trackIds, stringParams, noEscape, compat</text>
   <text x="100" y="465" font-family="monospace" font-size="24" fill="#d2a8ff">assumeObjects · preventIndent · helperMissing · blockHelperMissing · raw blocks</text>
-  <text x="100" y="545" font-family="monospace" font-size="24" fill="#8b949e">71/71 golden fixtures vs handlebars.js 4.7.8 · 1.45M fuzz execs clean · stdlib-only</text>
+  <text x="100" y="545" font-family="monospace" font-size="24" fill="#8b949e">handlebars.js 4.7.8 dialect · differentially verified · stdlib-only</text>
 </svg>
