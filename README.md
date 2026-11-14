@@ -18,7 +18,7 @@ The Go handlebars port everyone reaches for lists **14 unimplemented options and
 
 ## What it doesn't do
 
-- **Decorators, inline partials (`{{#* inline}}`) and `{{> @partial-block}}`: not implemented yet.
+- **Decorators, inline partials, and partial-block**: not implemented yet (`{{#* inline}}` and `{{> @partial-block}}` are parse errors for now).
 - **`@level` / log levels**: a plain `log` helper ships; the level plumbing does not.
 - **JS insertion-order map iteration**: Go maps have no insertion order, so `{{#each}}` over a map iterates **sorted keys**. Named dialect difference: handlebars.js preserves insertion order.
 - **No default `raw` helper**: same as handlebars.js. Register the shipped one explicitly: `handlebars.RawHelper`.
